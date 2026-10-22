@@ -1,1 +1,97 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-main: #f0f4fc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --border-subtle: #e2e8f0;
+  --border-inner: #cbd5e1;
+  --accent-mint: #00dc82;
+  --text-muted: #64748b;
+}
+
+.dark {
+  --bg-main: #090d16;
+  --bg-surface: #101726;
+  --bg-card: #151e32;
+  --border-subtle: #1e293b;
+  --border-inner: #334155;
+  --text-muted: #94a3b8;
+}
+
+body {
+  background-color: #f0f4fc;
+  color: #1e293b;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dark body,
+html.dark body {
+  background-color: #090d16;
+  color: #f1f5f9;
+}
+
+/* Custom scrollbar matching light admin theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f4fc;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Ocultar barra de desplazamiento en previews y componentes */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Animaciones suaves para modales centrados */
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeInOverlay {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-modal-pop {
+  animation: modalPop 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-overlay {
+  animation: fadeInOverlay 0.22s ease-out forwards;
+}
