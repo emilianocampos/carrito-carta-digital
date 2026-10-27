@@ -12,9 +12,11 @@ import { ReelsProductCard } from './ReelsProductCard';
 import { ProductCustomizerModal } from './ProductCustomizerModal';
 import { ProductInfoModal } from './ProductInfoModal';
 import { CustomerProfileModal } from './CustomerProfileModal';
+import { CustomerOrdersModal } from '@/features/orders/components/CustomerOrdersModal';
 import { CartProvider, useCart } from '@/features/orders/context/CartContext';
 import { CartDrawer } from '@/features/orders/components/CartDrawer';
 import { resolveThemeTokens, generateCssVariables } from '../presets';
+import { CurtainDoorsEntrance } from './CurtainDoorsEntrance';
 
 interface PublicMenuViewProps {
   menuData: PublicMenuData;
@@ -31,6 +33,7 @@ function MenuContent({
   const [selectedProduct, setSelectedProduct] = useState<PublicProduct | null>(null);
   const [infoProduct, setInfoProduct] = useState<PublicProduct | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const reelsContainerRef = React.useRef<HTMLDivElement>(null);
@@ -101,10 +104,14 @@ function MenuContent({
       }}
       className="min-h-screen bg-[#f0f4fc] dark:bg-[#090d16] text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white pb-28 sm:pb-32 transition-colors duration-200"
     >
+      {/* Transición de entrada estilo Curtain Doors (Motion) */}
+      <CurtainDoorsEntrance tenantName={tenant.name} logoUrl={tenant.logoUrl} />
+
       {/* 1. Header con Navbar superior, logo, slogan y banner centrado */}
       <MenuHeader
         tenant={tenant}
         settings={settings}
+        onOpenMyOrders={() => setIsMyOrdersOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
         activeRafflesCount={activeRafflesCount}
         onOpenCart={() => setIsCartOpen(true)}
@@ -182,13 +189,13 @@ function MenuContent({
                 /* MODO REELS EN MÓVIL (Swipe vertical card por card) */
                 <div
                   ref={reelsContainerRef}
-                  className="w-full h-[calc(100dvh-235px)] max-h-[550px] overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar overscroll-y-contain rounded-3xl"
+                  className="w-full h-[calc(100dvh-195px)] min-h-[500px] max-h-[630px] overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar overscroll-y-contain rounded-3xl shadow-2xl"
                   style={{ scrollSnapType: 'y mandatory' }}
                 >
                   {allFilteredProducts.map((product, index) => (
                     <div
                       key={product.id}
-                      className="w-full h-full snap-start snap-always pb-2.5"
+                      className="w-full h-full snap-start snap-always pb-3"
                     >
                       <ReelsProductCard
                         product={product}
@@ -305,6 +312,16 @@ function MenuContent({
         tenantSlug={tenant.slug}
         tenantName={tenant.name}
         raffles={initialRaffles}
+      />
+
+      {/* Modal de "Mis Pedidos" con búsqueda por Nombre y Apellido */}
+      <CustomerOrdersModal
+        isOpen={isMyOrdersOpen}
+        onClose={() => setIsMyOrdersOpen(false)}
+        tenantId={tenant.id}
+        tenantSlug={tenant.slug}
+        tenantName={tenant.name}
+        currency={settings.currency}
       />
 
       {/* Botón Flotante del Carrito (Abajo) */}

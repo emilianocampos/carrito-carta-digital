@@ -83,6 +83,44 @@ class AudioSynthesizer {
       osc.stop(start + 0.35);
     });
   }
+
+  /**
+   * Tono de caja registradora / pago aprobado (F#5 -> A5 -> C#6).
+   */
+  playPaymentApproved() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const notes = [739.99, 880.0, 1108.73]; // F#5, A5, C#6
+    const now = ctx.currentTime;
+
+    notes.forEach((freq, idx) => {
+      const start = now + idx * 0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0.35, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(start);
+      osc.stop(start + 0.4);
+    });
+  }
+
+  /**
+   * Desbloquea el AudioContext ante el primer clic del usuario para evitar bloqueos del navegador.
+   */
+  unlockAudio() {
+    const ctx = this.getContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+  }
 }
 
 export const soundManager = new AudioSynthesizer();

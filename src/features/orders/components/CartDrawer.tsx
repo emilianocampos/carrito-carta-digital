@@ -22,6 +22,7 @@ import { createOrderAction } from '../actions';
 import { createPaymentPreferenceAction } from '@/features/payments/actions';
 import { getStoredCustomerProfile, saveCustomerProfile } from '@/features/raffles/client';
 import { validateCouponAction } from '@/features/promotions/actions';
+import { createClient } from '@/lib/supabase/client';
 
 interface CartDrawerProps {
   tenantId: string;
@@ -184,6 +185,42 @@ export function CartDrawer({
       }
 
       const createdOrderId = res.data.orderId;
+
+      // 1. Emitir broadcast en tiempo real por WebSocket a la comandera (Cocina KDS)
+      try {
+        const supabase = createClient();
+        const broadcastChannel = supabase.channel(`kds_broadcast_${tenantId}`);
+        broadcastChannel.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            broadcastChannel
+              .send({
+                type: 'broadcast',
+                event: 'new_order',
+                payload: {
+                  id: res.data.orderId,
+                  orderNumber: res.data.orderNumber,
+                  customerName: res.data.customerName,
+                  customerPhone: res.data.customerPhone,
+                  orderStatus: 'pending',
+                  paymentStatus: res.data.paymentStatus,
+                  orderType: res.data.orderType,
+                  scheduledFor: res.data.scheduledFor,
+                  estimatedReadyAt: res.data.estimatedReadyAt,
+                  total: res.data.total,
+                  notes: res.data.notes,
+                  createdAt: res.data.createdAt,
+                  items: res.data.items,
+                },
+              })
+              .then(() => {
+                supabase.removeChannel(broadcastChannel);
+              })
+              .catch(() => {});
+          }
+        });
+      } catch (e) {
+        console.warn('Realtime broadcast warning:', e);
+      }
 
       // Limpiar carrito y cerrar modal
       clearCart();

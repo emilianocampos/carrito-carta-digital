@@ -24,10 +24,16 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { updateOrderStatusAction } from '../actions';
+import { updateOrderStatusAction, fetchKitchenOrdersAction } from '../actions';
 import { updatePreparationTimeAction, toggleOrderPauseAction } from '@/features/tenants/actions';
 import { formatCurrency } from '@/lib/utils';
 import type { OrderStatus } from '@/types/database';
+import {
+  soundManager,
+  triggerKitchenAlertVibration,
+  sendDesktopNotification,
+  buildOrderReadyWhatsAppUrl,
+} from '@/features/notifications';
 
 export interface KitchenOrderItem {
   id: string;
@@ -67,36 +73,6 @@ interface KitchenKDSViewProps {
   initialOrders: KitchenOrder[];
 }
 
-// Generador de sonido sintetizado Web Audio API
-function playOrderChime() {
-  try {
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, now); // D5
-    osc.frequency.setValueAtTime(880, now + 0.15); // A5
-
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.6);
-  } catch {
-    // Si el navegador bloquea audio antes de interacción
-  }
-}
-
 const PAUSE_REASONS = [
   'Plancha saturada (alta demanda)',
   'Falta temporal de insumos',
@@ -109,6 +85,7 @@ const PREPARATION_PRESETS = [10, 15, 20, 25, 30, 40, 60];
 
 export function KitchenKDSView({
   tenantId,
+  tenantSlug,
   currency,
   initialPreparationTimeMinutes,
   initialIsOrderingPaused,
@@ -130,12 +107,50 @@ export function KitchenKDSView({
   const [customPauseReason, setCustomPauseReason] = useState<string>('');
 
   const [isPendingTransition, startTransition] = useTransition();
-  const supabase = createClient();
+
+  // Mantener referencia al estado de sonido para no recrear canales Realtime innecesariamente
+  const soundEnabledRef = React.useRef(soundEnabled);
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
 
   // Suscripción Realtime a Órdenes
   useEffect(() => {
-    const channel = supabase
-      .channel(`kitchen_kds_${tenantId}`)
+    const supabase = createClient();
+
+    // 1. Canal exclusivo de Broadcast (mensajes WebSocket directos entre clientes)
+    const broadcastChannel = supabase
+      .channel(`kds_broadcast_${tenantId}`)
+      .on('broadcast', { event: 'new_order' }, ({ payload }) => {
+        const incoming = payload as KitchenOrder;
+        setOrders((prev) => {
+          if (prev.some((o) => o.id === incoming.id)) return prev;
+          return [incoming, ...prev];
+        });
+
+        if (soundEnabledRef.current) {
+          soundManager.playNewOrderKitchen();
+        }
+        triggerKitchenAlertVibration();
+        sendDesktopNotification({
+          title: `🍔 ¡Nuevo pedido #${incoming.orderNumber}!`,
+          body: `${incoming.customerName} • Total: ${formatCurrency(incoming.total, currency)}`,
+          url: `/admin/${tenantSlug}/orders`,
+          tag: `order-${incoming.id}`,
+        });
+      })
+      .on('broadcast', { event: 'order_status_updated' }, ({ payload }) => {
+        const updated = payload as { orderId: string; newStatus: OrderStatus };
+        setOrders((prev) =>
+          prev.map((o) => (o.id === updated.orderId ? { ...o, orderStatus: updated.newStatus } : o))
+        );
+      })
+      .subscribe();
+
+    // 2. Canal exclusivo de Base de Datos (con ID único para evitar cualquier colisión)
+    const dbChannelId = Math.random().toString(36).substring(2, 9);
+    const dbChannel = supabase
+      .channel(`kds_db_${tenantId}_${dbChannelId}`)
       .on(
         'postgres_changes',
         {
@@ -146,15 +161,39 @@ export function KitchenKDSView({
         },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
-            const newOrderRaw = payload.new as KitchenOrder;
+            const row = payload.new as {
+              id: string;
+              order_number: number;
+              customer_name: string;
+              customer_phone: string;
+              order_status: OrderStatus;
+              payment_status: string;
+              order_type: 'takeaway' | 'pickup_scheduled';
+              scheduled_for: string | null;
+              estimated_ready_at: string | null;
+              total: number;
+              notes: string | null;
+              created_at: string;
+            };
 
             const { data: items } = await supabase
               .from('order_items')
               .select('id, product_name, unit_price, quantity, subtotal, options_snapshot')
-              .eq('order_id', newOrderRaw.id);
+              .eq('order_id', row.id);
 
             const newOrderWithItems: KitchenOrder = {
-              ...newOrderRaw,
+              id: row.id,
+              orderNumber: row.order_number,
+              customerName: row.customer_name,
+              customerPhone: row.customer_phone,
+              orderStatus: row.order_status,
+              paymentStatus: row.payment_status,
+              orderType: row.order_type,
+              scheduledFor: row.scheduled_for,
+              estimatedReadyAt: row.estimated_ready_at,
+              total: Number(row.total),
+              notes: row.notes,
+              createdAt: row.created_at,
               items: (items ?? []).map((i) => ({
                 id: i.id,
                 productName: i.product_name,
@@ -168,17 +207,42 @@ export function KitchenKDSView({
 
             setOrders((prev) => [newOrderWithItems, ...prev]);
 
-            if (soundEnabled) {
-              playOrderChime();
+            if (soundEnabledRef.current) {
+              soundManager.playNewOrderKitchen();
             }
+            triggerKitchenAlertVibration();
+            sendDesktopNotification({
+              title: `🍔 ¡Nuevo pedido #${row.order_number}!`,
+              body: `${row.customer_name} • Total: ${formatCurrency(row.total, currency)}`,
+              url: `/admin/${tenantSlug}/orders`,
+              tag: `order-${row.id}`,
+            });
           } else if (payload.eventType === 'UPDATE') {
             const updated = payload.new as {
               id: string;
               order_status: OrderStatus;
               payment_status: string;
             };
-            setOrders((prev) =>
-              prev.map((o) =>
+            setOrders((prev) => {
+              const existing = prev.find((o) => o.id === updated.id);
+              if (
+                existing &&
+                existing.paymentStatus !== 'approved' &&
+                updated.payment_status === 'approved'
+              ) {
+                if (soundEnabledRef.current) {
+                  soundManager.playPaymentApproved();
+                }
+                triggerKitchenAlertVibration();
+                sendDesktopNotification({
+                  title: `💳 ¡Pago Aprobado #${existing.orderNumber}!`,
+                  body: `Pago confirmado de ${existing.customerName} (${formatCurrency(existing.total, currency)})`,
+                  url: `/admin/${tenantSlug}/orders`,
+                  tag: `payment-${existing.id}`,
+                });
+              }
+
+              return prev.map((o) =>
                 o.id === updated.id
                   ? {
                       ...o,
@@ -186,23 +250,59 @@ export function KitchenKDSView({
                       paymentStatus: updated.payment_status,
                     }
                   : o
-              )
-            );
+              );
+            });
           }
         }
       )
       .subscribe();
 
+    // Sincronización continua de respaldo (polling cada 6 segundos)
+    const pollInterval = setInterval(async () => {
+      const res = await fetchKitchenOrdersAction(tenantId);
+      if (res.success && res.data.length > 0) {
+        setOrders((prev) => {
+          const existingIds = new Set(prev.map((o) => o.id));
+          const hasNew = res.data.some((o) => !existingIds.has(o.id));
+          if (hasNew) {
+            if (soundEnabledRef.current) soundManager.playNewOrderKitchen();
+            triggerKitchenAlertVibration();
+          }
+          return res.data;
+        });
+      }
+    }, 6000);
+
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+      supabase.removeChannel(broadcastChannel);
+      supabase.removeChannel(dbChannel);
     };
-  }, [tenantId, soundEnabled, supabase]);
+  }, [tenantId, tenantSlug, currency]);
 
   // Cambiar estado de un pedido
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, orderStatus: newStatus } : o))
     );
+
+    // Emitir broadcast a la pantalla de seguimiento del cliente
+    try {
+      const supabase = createClient();
+      const trackChannel = supabase.channel(`order_track_${orderId}`);
+      trackChannel.subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          trackChannel
+            .send({
+              type: 'broadcast',
+              event: 'order_status_updated',
+              payload: { orderId, newStatus },
+            })
+            .then(() => supabase.removeChannel(trackChannel))
+            .catch(() => {});
+        }
+      });
+    } catch {}
 
     startTransition(async () => {
       await updateOrderStatusAction(tenantId, orderId, newStatus);
@@ -532,6 +632,7 @@ export function KitchenKDSView({
                     <OrderCardItem
                       key={order.id}
                       order={order}
+                      tenantSlug={tenantSlug}
                       nowTime={nowTime}
                       prepMinutes={prepMinutes}
                       currency={currency}
@@ -592,6 +693,7 @@ export function KitchenKDSView({
                     <OrderCardItem
                       key={order.id}
                       order={order}
+                      tenantSlug={tenantSlug}
                       nowTime={nowTime}
                       prepMinutes={prepMinutes}
                       currency={currency}
@@ -652,6 +754,7 @@ export function KitchenKDSView({
                     <OrderCardItem
                       key={order.id}
                       order={order}
+                      tenantSlug={tenantSlug}
                       nowTime={nowTime}
                       prepMinutes={prepMinutes}
                       currency={currency}
@@ -757,6 +860,7 @@ export function KitchenKDSView({
                 <OrderCardItem
                   key={order.id}
                   order={order}
+                  tenantSlug={tenantSlug}
                   nowTime={nowTime}
                   prepMinutes={prepMinutes}
                   currency={currency}
@@ -874,6 +978,7 @@ export function KitchenKDSView({
 
 interface OrderCardItemProps {
   order: KitchenOrder;
+  tenantSlug: string;
   nowTime: number;
   prepMinutes: number;
   currency: string;
@@ -886,6 +991,7 @@ interface OrderCardItemProps {
 
 function OrderCardItem({
   order,
+  tenantSlug,
   nowTime,
   prepMinutes,
   currency,
@@ -945,7 +1051,7 @@ function OrderCardItem({
           <div className="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1.5 mt-1">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-              <span>Hace {timeAgo} min</span>
+              <span suppressHydrationWarning>Hace {timeAgo} min</span>
             </span>
 
             {order.orderType === 'pickup_scheduled' && order.scheduledFor && (
@@ -1056,17 +1162,24 @@ function OrderCardItem({
         {order.orderStatus === 'ready' && (
           <div className="space-y-2">
             {order.customerPhone && (
-              <a
-                href={`https://wa.me/${order.customerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                  `¡Hola ${order.customerName}! 🍔 Tu pedido #${order.orderNumber} ya está LISTO para retirar en la ventanilla. ¡Te esperamos! 🎉`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() => {
+                  const trackingUrl = `${window.location.origin}/c/${tenantSlug}/track/${order.id}`;
+                  const url = buildOrderReadyWhatsAppUrl({
+                    phone: order.customerPhone!,
+                    customerName: order.customerName,
+                    orderNumber: order.orderNumber,
+                    tenantName: tenantSlug,
+                    trackingUrl,
+                  });
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
                 className="w-full py-2.5 px-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md shadow-emerald-500/20 cursor-pointer"
               >
                 <MessageCircle className="w-4 h-4 fill-white text-emerald-500" />
                 <span>AVISAR POR WHATSAPP (1-TAP)</span>
-              </a>
+              </button>
             )}
 
             <button

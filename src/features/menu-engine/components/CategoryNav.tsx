@@ -22,8 +22,8 @@ export function CategoryNav({
   onSearchChange,
 }: CategoryNavProps) {
   return (
-    <div className="w-full bg-[#f0f4fc] dark:bg-[#090d16] py-4 sm:py-5 px-4 sm:px-6 transition-colors">
-      <div className="max-w-6xl mx-auto space-y-3.5 sm:space-y-4">
+    <div className="w-full bg-[#f0f4fc] dark:bg-[#090d16] -mt-6 rounded-t-3xl relative z-20 pt-5 transition-colors shadow-[0_-8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_25px_rgba(0,0,0,0.35)]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-3.5 sm:space-y-4">
         {/* Fila Superior: Título "Nuestro Menú" */}
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -51,68 +51,72 @@ export function CategoryNav({
             </button>
           )}
         </div>
+      </div>
 
-        {/* Píldoras de Categorías con conteos horizontales (Todo + categorías) */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-          {/* Píldora "Todo" */}
-          <button
-            type="button"
-            onClick={() => onSelectCategory('all')}
-            style={
-              selectedCategoryId === 'all'
-                ? { backgroundColor: 'var(--theme-primary, #00dc82)' }
-                : undefined
-            }
-            className={`whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 select-none cursor-pointer active:scale-95 ${
-              selectedCategoryId === 'all'
-                ? 'text-white shadow-sm'
-                : 'bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs'
-            }`}
-          >
-            <span>Todo</span>
-            <span
-              className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+      {/* Píldoras de Categorías - STICKY debajo del Navbar superior */}
+      <div className="sticky top-[57px] sm:top-[64px] z-30 bg-[#f0f4fc]/95 dark:bg-[#090d16]/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 py-2.5 mt-3 transition-colors shadow-xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+            {/* Píldora "Todo" */}
+            <button
+              type="button"
+              onClick={() => onSelectCategory('all')}
+              style={
                 selectedCategoryId === 'all'
-                  ? 'bg-black/20 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  ? { backgroundColor: 'var(--theme-primary, #00dc82)' }
+                  : undefined
+              }
+              className={`whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 select-none cursor-pointer active:scale-95 ${
+                selectedCategoryId === 'all'
+                  ? 'text-white shadow-sm'
+                  : 'bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs'
               }`}
             >
-              {totalProductsCount}
-            </span>
-          </button>
-
-          {/* Categorías dinámicas */}
-          {categories.map((cat) => {
-            const isSelected = selectedCategoryId === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => onSelectCategory(cat.id)}
-                style={
-                  isSelected
-                    ? { backgroundColor: 'var(--theme-primary, #00dc82)' }
-                    : undefined
-                }
-                className={`whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 select-none cursor-pointer active:scale-95 ${
-                  isSelected
-                    ? 'text-white shadow-sm'
-                    : 'bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs'
+              <span>Todo</span>
+              <span
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  selectedCategoryId === 'all'
+                    ? 'bg-black/20 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                 }`}
               >
-                <span>{cat.name}</span>
-                <span
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                {totalProductsCount}
+              </span>
+            </button>
+
+            {/* Categorías dinámicas */}
+            {categories.map((cat) => {
+              const isSelected = selectedCategoryId === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => onSelectCategory(cat.id)}
+                  style={
                     isSelected
-                      ? 'bg-black/20 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      ? { backgroundColor: 'var(--theme-primary, #00dc82)' }
+                      : undefined
+                  }
+                  className={`whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 select-none cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'text-white shadow-sm'
+                      : 'bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs'
                   }`}
                 >
-                  {cat.products.length}
-                </span>
-              </button>
-            );
-          })}
+                  <span>{cat.name}</span>
+                  <span
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                      isSelected
+                        ? 'bg-black/20 text-white'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    {cat.products.length}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

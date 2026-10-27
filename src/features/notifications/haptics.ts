@@ -23,3 +23,15 @@ export function triggerKitchenAlertVibration() {
     }
   }
 }
+
+export function triggerPaymentSuccessVibration() {
+  if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+    // Patrón alegre de pago: 150ms, pausa 80ms, 250ms
+    try {
+      navigator.vibrate([150, 80, 250]);
+    } catch {
+      // Ignorar
+    }
+  }
+}
+

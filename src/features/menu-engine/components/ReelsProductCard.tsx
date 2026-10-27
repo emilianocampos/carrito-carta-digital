@@ -64,18 +64,18 @@ export function ReelsProductCard({
   return (
     <div
       onClick={handleCardClick}
-      className="relative w-full h-full snap-start snap-always shrink-0 rounded-3xl overflow-hidden shadow-2xl bg-slate-950 flex flex-col justify-between select-none border border-white/10 cursor-pointer group"
+      className="relative w-full h-full snap-start snap-always shrink-0 rounded-3xl overflow-hidden shadow-2xl bg-slate-950 flex flex-col justify-between select-none border border-white/10 cursor-pointer group animate-in fade-in zoom-in-[0.98] duration-500 ease-out fill-mode-both transition-all"
     >
-      {/* 1. Fondo de la Card: Foto o Gradiente Gastronómico */}
+      {/* 1. Fondo de la Card: Foto o Gradiente Gastronómico con zoom sutil */}
       {product.imageUrl ? (
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 overflow-hidden">
           <Image
             src={product.imageUrl}
             alt={product.name}
             fill
             sizes="100vw"
             priority={currentIndex <= 2}
-            className="object-cover group-hover:scale-102 transition-transform duration-300"
+            className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
           />
           {/* Capas de gradientes estilo Reels/TikTok para máxima legibilidad */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/50" />
@@ -90,8 +90,8 @@ export function ReelsProductCard({
         </div>
       )}
 
-      {/* 2. Barra Superior Flotante: Categoría, Badges e Índice de Card */}
-      <div className="relative z-10 p-3.5 sm:p-4 flex items-center justify-between gap-2">
+      {/* 2. Barra Superior Flotante: Categoría, Badges e Índice de Card (Entrada animada desde arriba) */}
+      <div className="relative z-10 p-3.5 sm:p-4 flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-3 duration-500 delay-100 fill-mode-both">
         <div className="flex flex-wrap items-center gap-1.5">
           {categoryName && (
             <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/25 shadow-sm">
@@ -129,8 +129,8 @@ export function ReelsProductCard({
         </div>
       </div>
 
-      {/* 3. Barra Lateral Derecha: Solo Badges Informativos y Flechas (SIN botón circular de pedido) */}
-      <div className="absolute right-3.5 bottom-24 z-20 flex flex-col items-center gap-2.5 pointer-events-auto">
+      {/* 3. Barra Lateral Derecha: Solo Badges Informativos y Flechas (Entrada animada desde derecha) */}
+      <div className="absolute right-3.5 bottom-24 z-20 flex flex-col items-center gap-2.5 pointer-events-auto animate-in fade-in slide-in-from-right-3 duration-500 delay-150 fill-mode-both">
         {/* Badge Tiempo de Salida */}
         {hasPrepTime && (
           <div className="flex flex-col items-center justify-center w-10 h-10 rounded-2xl bg-black/60 backdrop-blur-md border border-white/15 text-white/90 shadow-md">
@@ -170,8 +170,8 @@ export function ReelsProductCard({
         </div>
       </div>
 
-      {/* 4. Overlay Inferior: Nombre, Descripción y ÚNICO Botón Grande */}
-      <div className="relative z-10 p-4 sm:p-5 pt-0 space-y-2 w-full pr-14 sm:pr-4">
+      {/* 4. Overlay Inferior: Nombre, Descripción y ÚNICO Botón Grande (Entrada animada desde abajo) */}
+      <div className="relative z-10 p-4 sm:p-5 pt-0 space-y-2 w-full pr-14 sm:pr-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
         {/* Título y Estado */}
         <div>
           <div className="flex items-center gap-2 mb-1">

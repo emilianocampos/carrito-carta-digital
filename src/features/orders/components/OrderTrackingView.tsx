@@ -20,6 +20,13 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils';
 import type { OrderStatus, PaymentStatus } from '@/types/database';
+import {
+  soundManager,
+  triggerOrderReadyVibration,
+  triggerPaymentSuccessVibration,
+  sendDesktopNotification,
+  buildOrderConfirmedWhatsAppUrl,
+} from '@/features/notifications';
 
 export interface OrderItemSnapshot {
   id: string;
@@ -165,8 +172,34 @@ export function OrderTrackingView({ initialOrder }: OrderTrackingViewProps) {
 
   // Suscripción en tiempo real a cambios de este pedido
   useEffect(() => {
-    const channel = supabase
+    // 1. Canal de Broadcast (actualizaciones instantáneas enviadas por la cocina)
+    const broadcastChannel = supabase
       .channel(`order_track_${order.id}`)
+      .on('broadcast', { event: 'order_status_updated' }, ({ payload }) => {
+        const { newStatus } = payload as { newStatus: OrderStatus };
+        setOrder((prev) => {
+          if (newStatus === 'ready' && prev.orderStatus !== 'ready') {
+            triggerOrderReadyVibration();
+            soundManager.playOrderReady();
+            sendDesktopNotification({
+              title: `🍔 ¡Tu pedido #${prev.orderNumber} está listo!`,
+              body: `Pasa a retirarlo por la ventanilla de ${prev.tenant.name}. ¡Que lo disfrutes!`,
+              url: window.location.href,
+              tag: `order-ready-${prev.id}`,
+            });
+          }
+          return {
+            ...prev,
+            orderStatus: newStatus,
+          };
+        });
+      })
+      .subscribe();
+
+    // 2. Canal de Base de Datos exclusivo para cambios en PostgreSQL
+    const dbChannelId = Math.random().toString(36).substring(2, 9);
+    const dbChannel = supabase
+      .channel(`order_track_db_${order.id}_${dbChannelId}`)
       .on(
         'postgres_changes',
         {
@@ -182,38 +215,97 @@ export function OrderTrackingView({ initialOrder }: OrderTrackingViewProps) {
             estimated_ready_at: string | null;
           };
 
-          setOrder((prev) => ({
-            ...prev,
-            orderStatus: updated.order_status,
-            paymentStatus: updated.payment_status,
-            estimatedReadyAt: updated.estimated_ready_at,
-          }));
+          setOrder((prev) => {
+            const wasPaymentApproved = prev.paymentStatus === 'approved';
+            const isPaymentApproved = updated.payment_status === 'approved';
+            const wasReady = prev.orderStatus === 'ready';
+            const isReady = updated.order_status === 'ready';
 
-          // Alertas multi-canal cuando el pedido pasa a LISTO:
-          if (updated.order_status === 'ready') {
-            // 1. Vibración táctil en el celular
-            if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-              navigator.vibrate([300, 150, 300, 150, 500]);
+            // Alerta si el pago acaba de ser aprobado
+            if (isPaymentApproved && !wasPaymentApproved) {
+              soundManager.playPaymentApproved();
+              triggerPaymentSuccessVibration();
+              sendDesktopNotification({
+                title: '💳 ¡Pago Acreditado!',
+                body: `Tu pago para el pedido #${prev.orderNumber} fue aprobado con éxito. Ya estamos cocinando.`,
+                url: window.location.href,
+                tag: `payment-${prev.id}`,
+              });
             }
 
-            // 2. Sonido festivo con Web Audio API
-            playCelebrationChime();
+            // Alerta multi-canal cuando el pedido pasa a LISTO
+            if (isReady && !wasReady) {
+              triggerOrderReadyVibration();
+              soundManager.playOrderReady();
+              sendDesktopNotification({
+                title: `🍔 ¡Tu pedido #${prev.orderNumber} está listo!`,
+                body: `Pasa a retirarlo por la ventanilla de ${prev.tenant.name}. ¡Que lo disfrutes!`,
+                url: window.location.href,
+                tag: `order-ready-${prev.id}`,
+              });
+            }
 
-            // 3. Notificación nativa del celular
-            sendBrowserNotification(
-              `🍔 ¡Tu pedido #${order.orderNumber} está listo!`,
-              `Pasa a retirarlo por la ventanilla de ${order.tenant.name}. ¡Que lo disfrutes!`,
-              window.location.href
-            );
-          }
+            return {
+              ...prev,
+              orderStatus: updated.order_status,
+              paymentStatus: updated.payment_status,
+              estimatedReadyAt: updated.estimated_ready_at,
+            };
+          });
         }
       )
       .subscribe();
 
+    // Polling de respaldo cada 5 segundos si el pedido sigue activo
+    const pollInterval = setInterval(async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('order_status, payment_status, estimated_ready_at')
+        .eq('id', order.id)
+        .maybeSingle();
+
+      if (data) {
+        setOrder((prev) => {
+          if (
+            prev.orderStatus === data.order_status &&
+            prev.paymentStatus === data.payment_status &&
+            prev.estimatedReadyAt === data.estimated_ready_at
+          ) {
+            return prev;
+          }
+
+          if (data.order_status === 'ready' && prev.orderStatus !== 'ready') {
+            triggerOrderReadyVibration();
+            soundManager.playOrderReady();
+            sendDesktopNotification({
+              title: `🍔 ¡Tu pedido #${prev.orderNumber} está listo!`,
+              body: `Pasa a retirarlo por la ventanilla de ${prev.tenant.name}. ¡Que lo disfrutes!`,
+              url: window.location.href,
+              tag: `order-ready-${prev.id}`,
+            });
+          }
+
+          if (data.payment_status === 'approved' && prev.paymentStatus !== 'approved') {
+            soundManager.playPaymentApproved();
+            triggerPaymentSuccessVibration();
+          }
+
+          return {
+            ...prev,
+            orderStatus: data.order_status as OrderStatus,
+            paymentStatus: data.payment_status as PaymentStatus,
+            estimatedReadyAt: data.estimated_ready_at,
+          };
+        });
+      }
+    }, 5000);
+
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+      supabase.removeChannel(broadcastChannel);
+      supabase.removeChannel(dbChannel);
     };
-  }, [order.id, order.orderNumber, order.tenant.name, supabase]);
+  }, [order.id, order.orderNumber, order.tenant.name]);
 
   // Pedir permiso para notificaciones nativas
   const handleRequestNotification = async () => {
@@ -527,20 +619,41 @@ export function OrderTrackingView({ initialOrder }: OrderTrackingViewProps) {
         </div>
       </div>
 
-      {/* Botón de Contacto por WhatsApp si el carrito tiene número */}
-      {order.tenant.whatsappPhone && (
-        <div className="pt-5">
+      {/* Botones de Notificación y Contacto por WhatsApp */}
+      <div className="pt-5 space-y-2.5">
+        {order.customerPhone && (
+          <button
+            type="button"
+            onClick={() => {
+              const url = buildOrderConfirmedWhatsAppUrl({
+                phone: order.customerPhone!,
+                customerName: order.customerName,
+                orderNumber: order.orderNumber,
+                tenantName: order.tenant.name,
+                estimatedMinutes: 20,
+                trackingUrl: window.location.href,
+              });
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }}
+            className="w-full py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4 fill-white text-emerald-500" />
+            <span>Guardar comanda en mi WhatsApp</span>
+          </button>
+        )}
+
+        {order.tenant.whatsappPhone && (
           <a
             href={`https://wa.me/${order.tenant.whatsappPhone.replace(/[^0-9]/g, '')}?text=Hola!%20Tengo%20una%20consulta%20sobre%20mi%20pedido%20%23${order.orderNumber}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-3.5 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
+            className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
           >
             <Phone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Consultar al carrito por WhatsApp</span>
           </a>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { requireTenantMembership } from '@/features/auth/server';
 import { AdminBottomNav } from '@/components/admin/AdminBottomNav';
 import { AdminSidebarNav } from '@/components/admin/AdminSidebarNav';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { AdminNotificationListener } from '@/features/notifications/components/AdminNotificationListener';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -133,6 +134,13 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
 
       {/* Bottom Nav para Móviles */}
       <AdminBottomNav tenantSlug={tenant.slug} pendingCount={pendingCount} />
+
+      {/* Escucha global de notificaciones multicanal (Sonido, Háptica y Push) */}
+      <AdminNotificationListener
+        tenantId={tenant.id}
+        tenantSlug={tenant.slug}
+        tenantName={tenant.name}
+      />
     </div>
   );
 }

@@ -168,12 +168,18 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           </Link>
 
           {/* Campanita de Notificaciones */}
-          <div className="relative p-2.5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 shadow-sm">
+          <Link
+            href={`/admin/${tenant.slug}/orders`}
+            title={`${validTodayOrders.filter((o) => o.order_status === 'pending').length} pedidos pendientes en cocina`}
+            className="relative p-2.5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm transition-all hover:scale-105 active:scale-95"
+          >
             <Bell className="w-4 h-4" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-sm">
-              5
-            </span>
-          </div>
+            {validTodayOrders.filter((o) => o.order_status === 'pending').length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-sm animate-pulse">
+                {validTodayOrders.filter((o) => o.order_status === 'pending').length}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
 

@@ -10,9 +10,32 @@ export type OrderActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string };
 
+export type CreatedOrderResult = {
+  orderId: string;
+  orderNumber: number;
+  tenantSlug: string;
+  customerName: string;
+  customerPhone: string;
+  orderType: 'takeaway' | 'pickup_scheduled';
+  paymentStatus: string;
+  total: number;
+  notes: string | null;
+  scheduledFor: string | null;
+  estimatedReadyAt: string;
+  createdAt: string;
+  items: Array<{
+    id: string;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+    optionsSnapshot: any;
+  }>;
+};
+
 export async function createOrderAction(
   input: CreateOrderInput
-): Promise<OrderActionResult<{ orderId: string; orderNumber: number; tenantSlug: string }>> {
+): Promise<OrderActionResult<CreatedOrderResult>> {
   try {
     const parsed = createOrderSchema.parse(input);
     const supabase = await createClient();
@@ -286,6 +309,23 @@ export async function createOrderAction(
         orderId: order.id,
         orderNumber: order.order_number,
         tenantSlug: tenant.slug,
+        customerName: parsed.customerName,
+        customerPhone: cleanPhone,
+        orderType: parsed.orderType,
+        paymentStatus,
+        total: finalTotal,
+        notes: parsed.notes ?? null,
+        scheduledFor: parsed.scheduledFor ? new Date(parsed.scheduledFor).toISOString() : null,
+        estimatedReadyAt,
+        createdAt: now.toISOString(),
+        items: computedItems.map((ci, idx) => ({
+          id: `item-${order.id}-${idx}`,
+          productName: ci.productName,
+          quantity: ci.quantity,
+          unitPrice: ci.unitPrice,
+          subtotal: ci.subtotal,
+          optionsSnapshot: ci.optionsSnapshot as any,
+        })),
       },
     };
   } catch (err: unknown) {
@@ -343,3 +383,183 @@ export async function updateOrderStatusAction(
     };
   }
 }
+
+export interface CustomerOrderSummary {
+  id: string;
+  orderNumber: number;
+  customerName: string;
+  customerPhone: string;
+  orderStatus: OrderStatus;
+  paymentStatus: string;
+  orderType: 'takeaway' | 'pickup_scheduled';
+  total: number;
+  scheduledFor: string | null;
+  estimatedReadyAt: string | null;
+  createdAt: string;
+  itemsCount: number;
+  itemsSummary: string;
+}
+
+export async function searchCustomerOrdersAction(
+  tenantId: string,
+  customerName: string
+): Promise<OrderActionResult<CustomerOrderSummary[]>> {
+  try {
+    const query = customerName.trim();
+    if (!query || query.length < 2) {
+      return { success: false, error: 'Ingresá al menos 2 letras de tu nombre para buscar.' };
+    }
+
+    const supabase = await createClient();
+
+    // Buscar pedidos para ese tenant con nombre coincidente (ilike)
+    const { data: orders, error: ordersError } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        order_number,
+        customer_name,
+        customer_phone,
+        order_status,
+        payment_status,
+        order_type,
+        scheduled_for,
+        estimated_ready_at,
+        total,
+        created_at
+      `)
+      .eq('tenant_id', tenantId)
+      .ilike('customer_name', `%${query}%`)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (ordersError) {
+      throw new Error(ordersError.message);
+    }
+
+    if (!orders || orders.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const orderIds = orders.map((o) => o.id);
+    const { data: items } = await supabase
+      .from('order_items')
+      .select('order_id, product_name, quantity')
+      .in('order_id', orderIds);
+
+    const itemsByOrder: Record<string, Array<{ productName: string; quantity: number }>> = {};
+    if (items) {
+      items.forEach((item) => {
+        if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
+        itemsByOrder[item.order_id].push({
+          productName: item.product_name,
+          quantity: item.quantity,
+        });
+      });
+    }
+
+    const result: CustomerOrderSummary[] = orders.map((o) => {
+      const orderItems = itemsByOrder[o.id] || [];
+      const itemsCount = orderItems.reduce((acc, i) => acc + i.quantity, 0);
+      const itemsSummary = orderItems.map((i) => `${i.quantity}x ${i.productName}`).join(', ');
+
+      return {
+        id: o.id,
+        orderNumber: o.order_number,
+        customerName: o.customer_name,
+        customerPhone: o.customer_phone,
+        orderStatus: o.order_status as OrderStatus,
+        paymentStatus: o.payment_status,
+        orderType: o.order_type as 'takeaway' | 'pickup_scheduled',
+        total: Number(o.total),
+        scheduledFor: o.scheduled_for,
+        estimatedReadyAt: o.estimated_ready_at,
+        createdAt: o.created_at,
+        itemsCount,
+        itemsSummary,
+      };
+    });
+
+    return { success: true, data: result };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Error al buscar pedidos',
+    };
+  }
+}
+
+export async function fetchKitchenOrdersAction(tenantId: string) {
+  try {
+    const supabase = await createClient();
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: orders, error } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        order_number,
+        customer_name,
+        customer_phone,
+        order_status,
+        payment_status,
+        order_type,
+        scheduled_for,
+        estimated_ready_at,
+        total,
+        notes,
+        created_at
+      `)
+      .eq('tenant_id', tenantId)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false });
+
+    if (error || !orders) return { success: false, data: [] };
+
+    const orderIds = orders.map((o) => o.id);
+    let itemsMap: Record<string, any[]> = {};
+
+    if (orderIds.length > 0) {
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('id, order_id, product_name, unit_price, quantity, subtotal, options_snapshot')
+        .in('order_id', orderIds);
+
+      if (items) {
+        items.forEach((item) => {
+          if (!itemsMap[item.order_id]) itemsMap[item.order_id] = [];
+          itemsMap[item.order_id].push({
+            id: item.id,
+            productName: item.product_name,
+            quantity: item.quantity,
+            unitPrice: Number(item.unit_price),
+            subtotal: Number(item.subtotal),
+            optionsSnapshot: item.options_snapshot ?? {},
+          });
+        });
+      }
+    }
+
+    const formatted = orders.map((o) => ({
+      id: o.id,
+      orderNumber: o.order_number,
+      customerName: o.customer_name,
+      customerPhone: o.customer_phone,
+      orderStatus: o.order_status as OrderStatus,
+      paymentStatus: o.payment_status,
+      orderType: o.order_type as 'takeaway' | 'pickup_scheduled',
+      scheduledFor: o.scheduled_for,
+      estimatedReadyAt: o.estimated_ready_at,
+      total: Number(o.total),
+      notes: o.notes,
+      createdAt: o.created_at,
+      items: itemsMap[o.id] ?? [],
+    }));
+
+    return { success: true, data: formatted };
+  } catch {
+    return { success: false, data: [] };
+  }
+}
+
+
