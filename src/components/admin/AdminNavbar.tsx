@@ -271,7 +271,7 @@ export function AdminNavbar({
                 onClick={() => setIsSearchOpen(false)}
                 className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100/80 hover:text-slate-900 font-medium transition-colors"
               >
-                <span>Comandera KDS & Pedidos</span>
+                <span>Comandera & Pedidos</span>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               </Link>
               <Link

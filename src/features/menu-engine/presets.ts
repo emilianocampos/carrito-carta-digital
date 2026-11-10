@@ -2,6 +2,39 @@ import type { ThemePreset, ThemeTokens } from './types';
 
 export const THEME_PRESETS: ThemePreset[] = [
   {
+    code: 'antigravity_dark',
+    name: 'Antigravity Dark (Azulado)',
+    description: 'Estética nocturna inspirada en Antigravity IDE: fondo obsidiana azulado, superficies pizarra fría y botones azul cobalto eléctrico.',
+    previewColor: '#1d64f2',
+    tokens: {
+      colors: {
+        background: '#0a0d14',
+        surface: '#0e131f',
+        card: '#121826',
+        primary: '#1d64f2',
+        secondary: '#3b82f6',
+        text: '#edf2f7',
+        mutedText: '#8b98b1',
+        price: '#60a5fa',
+        border: '#212b42',
+      },
+      typography: {
+        fontFamily: 'Inter',
+        headingWeight: '800',
+      },
+      cards: {
+        layout: 'horizontal',
+        radius: 'lg',
+        shadow: 'colored',
+        borderWidth: '1px',
+      },
+    },
+    layoutConfig: {
+      headerStyle: 'banner_with_avatar',
+      showCategoryBadges: true,
+    },
+  },
+  {
     code: 'street_food_dark',
     name: 'Street Food Dark',
     description: 'Estilo nocturno de alto contraste, ideal para carritos de comida al paso con estética moderna.',

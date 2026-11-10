@@ -40,22 +40,22 @@ interface ThemeEditorViewProps {
 
 // Swatches de colores sugeridos para botones
 const PRIMARY_COLOR_SWATCHES = [
+  { name: 'Azul Antigravity', hex: '#1d64f2' },
   { name: 'Indigo Eléctrico', hex: '#5865F2' },
   { name: 'Esmeralda Fresco', hex: '#10b981' },
   { name: 'Naranja Street Food', hex: '#ff5722' },
   { name: 'Rojo Gourmet', hex: '#e11d48' },
   { name: 'Violeta Neón', hex: '#7c3aed' },
   { name: 'Ámbar Cálido', hex: '#f59e0b' },
-  { name: 'Negro Mate', hex: '#0f172a' },
   { name: 'Azul Cyan', hex: '#06b6d4' },
 ];
 
 // Swatches de fondos populares
 const BACKGROUND_COLOR_SWATCHES = [
-  { name: 'Noche Profunda', hex: '#090d16' },
+  { name: 'Obsidiana Antigravity', hex: '#0a0d14' },
+  { name: 'Pizarra Azulada', hex: '#121826' },
   { name: 'Carbón Dark', hex: '#0f172a' },
   { name: 'Negro Puro', hex: '#070d12' },
-  { name: 'Zinc Oscuro', hex: '#18181b' },
   { name: 'Azul Claro Soft', hex: '#f0f4fc' },
   { name: 'Blanco Puro', hex: '#ffffff' },
   { name: 'Arena Minimal', hex: '#f8f8f6' },
@@ -474,6 +474,53 @@ export function ThemeEditorView({
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Elegí el color de acento de tus botones principales, fondo y precios de la carta
                 </p>
+              </div>
+            </div>
+
+            {/* PRESETS VISUALES PREFABRICADOS (Incluye Antigravity Dark Azulado) */}
+            <div className="space-y-2.5">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-[#8b98b1] uppercase tracking-wider block">
+                Plantillas Visuales Rápidas (1 Clic)
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {THEME_PRESETS.map((preset) => {
+                  const isActivePreset = selectedPresetCode === preset.code;
+                  return (
+                    <button
+                      key={preset.code}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset.code)}
+                      className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between gap-2.5 cursor-pointer ${
+                        isActivePreset
+                          ? 'bg-white dark:bg-[#151e31] border-[#1d64f2] ring-2 ring-[#1d64f2]/25 shadow-sm'
+                          : 'bg-slate-50/70 dark:bg-[#131926] border-slate-200 dark:border-[#222d45] hover:border-[#1d64f2]/60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="w-7 h-7 rounded-xl shrink-0 border border-white/20 flex items-center justify-center shadow-xs"
+                          style={{ backgroundColor: preset.tokens.colors.background }}
+                        >
+                          <span
+                            className="w-3.5 h-3.5 rounded-full"
+                            style={{ backgroundColor: preset.previewColor }}
+                          />
+                        </div>
+                        <div className="truncate">
+                          <span className="text-xs font-black text-slate-900 dark:text-white block truncate">
+                            {preset.name}
+                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-[#8b98b1] block truncate">
+                            {preset.tokens.colors.background} • {preset.tokens.colors.primary}
+                          </span>
+                        </div>
+                      </div>
+                      {isActivePreset && (
+                        <Check className="w-4 h-4 text-[#1d64f2] shrink-0 stroke-[3]" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

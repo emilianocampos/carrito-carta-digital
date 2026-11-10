@@ -102,7 +102,7 @@ function MenuContent({
       style={{
         ...cssVars,
       }}
-      className="min-h-screen bg-[#f0f4fc] dark:bg-[#090d16] text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white pb-28 sm:pb-32 transition-colors duration-200"
+      className="min-h-screen bg-[#f0f4fc] dark:bg-[#0a0d14] text-slate-800 dark:text-[#edf2f7] flex flex-col antialiased selection:bg-[#1d64f2] selection:text-white pb-28 sm:pb-32 transition-colors duration-200"
     >
       {/* Transición de entrada estilo Curtain Doors (Motion) */}
       <CurtainDoorsEntrance tenantName={tenant.name} logoUrl={tenant.logoUrl} />
@@ -330,8 +330,8 @@ function MenuContent({
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
-            style={{ backgroundColor: 'var(--theme-primary, #5865F2)' }}
-            className="w-full sm:w-auto py-3.5 px-6 rounded-2xl text-white font-black text-sm flex items-center justify-between sm:justify-center gap-4 shadow-2xl shadow-black/35 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer border border-white/20 backdrop-blur-md"
+            style={{ backgroundColor: 'var(--theme-primary, #1d64f2)' }}
+            className="w-full sm:w-auto py-3.5 px-6 rounded-2xl text-white font-black text-sm flex items-center justify-between sm:justify-center gap-4 shadow-2xl shadow-black/40 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer border border-white/20 backdrop-blur-md"
           >
             <div className="flex items-center gap-2.5">
               <div className="relative flex items-center justify-center">

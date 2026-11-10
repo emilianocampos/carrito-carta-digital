@@ -70,7 +70,7 @@ export function AdminOnboardingTour({ tenantSlug, tenantName }: AdminOnboardingT
       targetId: 'tour-nav-orders',
       badge: 'El Corazón de la Cocina',
       category: 'OPERACIONES',
-      title: 'Comandera KDS en Vivo',
+      title: 'Comandera en Vivo',
       subtitle: 'Gestión instantánea de pedidos entrantes',
       icon: Flame,
       iconColor: 'text-amber-400',

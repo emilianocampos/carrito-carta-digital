@@ -169,13 +169,13 @@ export function ProductCard({
   }
 
   // =========================================================================
-  // 3. ESTILO PREDETERMINADO: CON FOTO HERO (Esquinas limpias / Sin redondeo excesivo)
+  // 3. ESTILO PREDETERMINADO: CON FOTO HERO (Estilo Antigravity Dark Azulado)
   // =========================================================================
   return (
     <div
       onClick={() => !isPaused && onOpenInfo?.(product)}
-      style={{ borderRadius: 'var(--theme-radius, 4px)' }}
-      className={`group relative w-full bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md dark:shadow-none transition-all duration-200 overflow-hidden flex flex-col justify-between cursor-pointer ${
+      style={{ borderRadius: 'var(--theme-radius, 1rem)' }}
+      className={`group relative w-full bg-white dark:bg-[#121826] border border-slate-200/80 dark:border-[#212b42] hover:border-slate-300 dark:hover:border-[#3b82f6]/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md dark:shadow-[0_6px_24px_rgba(0,0,0,0.45)] transition-all duration-200 overflow-hidden flex flex-col justify-between cursor-pointer ${
         isPaused ? 'opacity-60' : ''
       }`}
     >
@@ -322,8 +322,8 @@ export function ProductCard({
               e.stopPropagation();
               onSelectProduct(product);
             }}
-            style={{ backgroundColor: 'var(--theme-primary, #5865F2)' }}
-            className="py-1.5 px-4 rounded hover:brightness-110 text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0 cursor-pointer"
+            style={{ backgroundColor: 'var(--theme-primary, #1d64f2)' }}
+            className="py-1.5 px-4 rounded-full hover:brightness-110 text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-[#1d64f2]/25 active:scale-95 shrink-0 cursor-pointer"
           >
             <ShoppingBag className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Pedir</span>

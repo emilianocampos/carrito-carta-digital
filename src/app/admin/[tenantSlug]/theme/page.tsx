@@ -56,7 +56,7 @@ export default async function ThemePage({ params }: ThemePageProps) {
     notFound();
   }
 
-  const initialPresetCode = themeRecord?.preset_code || 'mamba_bistro';
+  const initialPresetCode = themeRecord?.preset_code || 'antigravity_dark';
   const initialTokens = (themeRecord?.tokens as Partial<ThemeTokens>) || {};
   const initialLayoutConfig = (themeRecord?.layout_config as LayoutConfig) || {};
 

@@ -8,17 +8,21 @@
   --bg-card: #ffffff;
   --border-subtle: #e2e8f0;
   --border-inner: #cbd5e1;
+  --accent-primary: #1d64f2;
   --accent-mint: #00dc82;
   --text-muted: #64748b;
 }
 
+/* Antigravity IDE Dark Mode (Azulado profundo) */
 .dark {
-  --bg-main: #090d16;
-  --bg-surface: #101726;
-  --bg-card: #151e32;
-  --border-subtle: #1e293b;
-  --border-inner: #334155;
-  --text-muted: #94a3b8;
+  --bg-main: #0a0d14;
+  --bg-surface: #0e131f;
+  --bg-card: #121826;
+  --bg-elevated: #171f32;
+  --border-subtle: #1e273d;
+  --border-inner: #283452;
+  --accent-primary: #1d64f2;
+  --text-muted: #8b98b1;
 }
 
 body {
@@ -29,11 +33,50 @@ body {
 
 .dark body,
 html.dark body {
-  background-color: #090d16;
-  color: #f1f5f9;
+  background-color: #0a0d14;
+  background-image: radial-gradient(circle at 50% 0%, rgba(29, 100, 242, 0.08) 0%, transparent 60%);
+  background-attachment: fixed;
+  color: #edf2f7;
 }
 
-/* Custom scrollbar matching light admin theme */
+/* Armonización global de superficies oscuras estilo Antigravity IDE (Azulado) */
+html.dark .dark\:bg-\[\#090d16\] {
+  background-color: #0a0d14 !important;
+  background-image: radial-gradient(circle at 50% 0%, rgba(29, 100, 242, 0.07) 0%, transparent 65%);
+}
+
+html.dark .dark\:bg-\[\#0c1322\] {
+  background-color: #0d121d !important;
+}
+
+html.dark .dark\:bg-\[\#111827\] {
+  background-color: #121826 !important;
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(96, 165, 250, 0.06);
+}
+
+html.dark .dark\:bg-\[\#111827\]\/95 {
+  background-color: rgba(18, 24, 38, 0.94) !important;
+}
+
+html.dark .dark\:border-slate-800,
+html.dark .dark\:border-slate-800\/80 {
+  border-color: #1f2940 !important;
+}
+
+html.dark .dark\:border-slate-700,
+html.dark .dark\:border-slate-700\/80,
+html.dark .dark\:border-slate-700\/60 {
+  border-color: #283552 !important;
+}
+
+html.dark .dark\:bg-slate-800,
+html.dark .dark\:bg-slate-800\/80,
+html.dark .dark\:bg-slate-800\/60,
+html.dark .dark\:bg-slate-800\/40 {
+  background-color: #161e31 !important;
+}
+
+/* Custom scrollbar matching Antigravity IDE theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -42,20 +85,21 @@ html.dark body {
   background: #f0f4fc;
 }
 .dark ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #0a0d14;
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 9999px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #232f48;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #334469;
 }
 
 /* Ocultar barra de desplazamiento en previews y componentes */

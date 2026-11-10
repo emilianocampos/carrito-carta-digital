@@ -36,7 +36,7 @@ export function AdminSidebarNav({ tenantSlug, pendingCount = 0 }: AdminSidebarNa
       isActive: pathname.endsWith('/dashboard'),
     },
     {
-      title: 'Pedidos (KDS)',
+      title: 'Pedidos',
       href: `/admin/${tenantSlug}/orders`,
       icon: ShoppingBag,
       iconColor: 'text-amber-400',
@@ -112,17 +112,17 @@ export function AdminSidebarNav({ tenantSlug, pendingCount = 0 }: AdminSidebarNa
             href={item.href}
             className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
               active
-                ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 shadow-[0_2px_8px_rgba(0,0,0,0.05)]'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50/80 dark:hover:bg-slate-800/60 border border-transparent'
+                ? 'text-slate-900 dark:text-white bg-white dark:bg-[#151d2e] border border-slate-200/90 dark:border-[#263554] shadow-[0_2px_8px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_12px_rgba(29,100,242,0.12)]'
+                : 'text-slate-500 dark:text-[#8b98b1] hover:text-slate-900 dark:hover:text-white hover:bg-slate-50/80 dark:hover:bg-[#121826] border border-transparent'
             }`}
           >
             <div className="flex items-center gap-3">
               <Icon
                 className={`w-4 h-4 transition-transform group-hover:scale-110 ${
-                  active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'
+                  active ? 'text-[#1d64f2] dark:text-[#60a5fa]' : 'text-slate-400 dark:text-[#6e7d99] group-hover:text-slate-700 dark:group-hover:text-[#d5deed]'
                 }`}
               />
-              <span className={active ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'}>
+              <span className={active ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-[#8b98b1] group-hover:text-slate-900 dark:group-hover:text-white'}>
                 {item.title}
               </span>
             </div>
@@ -133,7 +133,7 @@ export function AdminSidebarNav({ tenantSlug, pendingCount = 0 }: AdminSidebarNa
                   {item.badge}
                 </span>
               )}
-              {active && <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />}
+              {active && <ChevronRight className="w-3.5 h-3.5 text-[#1d64f2] dark:text-[#60a5fa]" />}
             </div>
           </Link>
         );

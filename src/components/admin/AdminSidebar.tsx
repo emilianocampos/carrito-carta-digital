@@ -213,7 +213,7 @@ export function AdminSidebar({
         >
           <div className="flex items-center gap-3">
             <ShoppingBag className={`w-[18px] h-[18px] ${isOrdersActive ? 'text-white' : 'text-[#ff9f43]'}`} />
-            <span>Pedidos (KDS)</span>
+            <span>Pedidos</span>
           </div>
           {pendingCount > 0 && (
             <span className="px-2 py-0.5 rounded-full bg-[#ea5455] text-white text-[11px] font-bold animate-pulse">

@@ -7,7 +7,6 @@ import {
   ShoppingBag,
   Package,
   Eye,
-  Bell,
   Trophy,
   ChevronRight,
   Layers,
@@ -19,6 +18,7 @@ import { requireTenantMembership } from '@/features/auth/server';
 import { formatCurrency } from '@/lib/utils';
 import { AdminOnboardingTour } from '@/components/admin/AdminOnboardingTour';
 import { DashboardExportButton } from '@/features/reports/components/DashboardExportButton';
+import { NotificationBellModal } from '@/features/notifications/components/NotificationBellModal';
 
 interface DashboardPageProps {
   params: Promise<{
@@ -77,15 +77,26 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   // Consultar pedidos de hoy y del mes
   const { data: monthOrders } = await supabase
     .from('orders')
-    .select('id, order_status, total, created_at')
+    .select('id, order_number, customer_name, order_status, payment_status, total, created_at')
     .eq('tenant_id', tenant.id)
-    .gte('created_at', startOfMonth.toISOString());
+    .gte('created_at', startOfMonth.toISOString())
+    .order('created_at', { ascending: false });
 
   const allMonthOrders = monthOrders ?? [];
   const validMonthOrders = allMonthOrders.filter((o) => o.order_status !== 'cancelled');
 
   const todayOrders = allMonthOrders.filter((o) => new Date(o.created_at) >= startOfDay);
   const validTodayOrders = todayOrders.filter((o) => o.order_status !== 'cancelled');
+
+  const notificationOrders = validTodayOrders.map((o) => ({
+    id: o.id,
+    orderNumber: o.order_number ?? 0,
+    customerName: o.customer_name || 'Cliente',
+    orderStatus: o.order_status,
+    paymentStatus: o.payment_status,
+    total: Number(o.total),
+    createdAt: o.created_at,
+  }));
 
   const earnedToday = validTodayOrders.reduce((sum, o) => sum + Number(o.total), 0);
   const earnedMonth = validMonthOrders.reduce((sum, o) => sum + Number(o.total), 0);
@@ -156,30 +167,24 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           {/* Botón de Exportar Reporte de Ventas (Excel y PDF) */}
           <DashboardExportButton tenantId={tenant.id} tenantSlug={tenant.slug} />
 
-          {/* Botón Ver Carta Pública */}
+          {/* Botón Ver Carta Pública (Estilo píldora azul Antigravity IDE) */}
           <Link
             href={`/c/${tenant.slug}`}
             target="_blank"
-            className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs tracking-wide shadow-sm shadow-indigo-200 dark:shadow-none active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-[#1d64f2] hover:bg-[#1956d4] text-white font-bold text-xs tracking-wide shadow-md shadow-[#1d64f2]/30 active:scale-95 transition-all"
           >
             <Eye className="w-4 h-4 stroke-[2.5]" />
             <span className="hidden sm:inline">Ver Carta Pública</span>
             <span className="sm:hidden">Ver Carta</span>
           </Link>
 
-          {/* Campanita de Notificaciones */}
-          <Link
-            href={`/admin/${tenant.slug}/orders`}
-            title={`${validTodayOrders.filter((o) => o.order_status === 'pending').length} pedidos pendientes en cocina`}
-            className="relative p-2.5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm transition-all hover:scale-105 active:scale-95"
-          >
-            <Bell className="w-4 h-4" />
-            {validTodayOrders.filter((o) => o.order_status === 'pending').length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-sm animate-pulse">
-                {validTodayOrders.filter((o) => o.order_status === 'pending').length}
-              </span>
-            )}
-          </Link>
+          {/* Campanita de Notificaciones con Modal animado con GSAP desde el botón */}
+          <NotificationBellModal
+            tenantId={tenant.id}
+            tenantSlug={tenant.slug}
+            currency={currency}
+            initialOrders={notificationOrders}
+          />
         </div>
       </div>
 

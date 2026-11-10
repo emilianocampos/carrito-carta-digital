@@ -99,18 +99,18 @@ export function AdminBottomNav({ tenantSlug, pendingCount = 0 }: AdminBottomNavP
         aria-label="Navegación móvil"
         className="fixed bottom-3 left-3 right-3 sm:left-10 sm:right-10 max-w-md mx-auto lg:hidden z-40 pointer-events-none"
       >
-        <div className="pointer-events-auto backdrop-blur-2xl bg-white/95 dark:bg-[#0c1322]/95 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/10 rounded-full px-3 py-1.5 flex items-center justify-between">
+        <div className="pointer-events-auto backdrop-blur-2xl bg-white/95 dark:bg-[#0e131f]/95 border border-slate-200/90 dark:border-[#222d46] shadow-xl shadow-slate-900/10 dark:shadow-black/60 rounded-full px-3 py-1.5 flex items-center justify-between">
           {/* 1. Inicio (Dashboard) */}
           <Link
             id="tour-mobile-dashboard"
             href={`/admin/${tenantSlug}/dashboard`}
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 active:scale-95 ${
-              isDashboardActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              isDashboardActive ? 'text-[#1d64f2] dark:text-[#60a5fa]' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Home className={`w-5 h-5 ${isDashboardActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
             {isDashboardActive ? (
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 mt-1" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1d64f2] dark:bg-[#60a5fa] mt-1" />
             ) : (
               <span className="w-1.5 h-1.5 mt-1" />
             )}
@@ -121,12 +121,12 @@ export function AdminBottomNav({ tenantSlug, pendingCount = 0 }: AdminBottomNavP
             id="tour-mobile-customers"
             href={`/admin/${tenantSlug}/customers`}
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 active:scale-95 ${
-              isCustomersActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              isCustomersActive ? 'text-[#1d64f2] dark:text-[#60a5fa]' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Users className={`w-5 h-5 ${isCustomersActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
             {isCustomersActive ? (
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 mt-1" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1d64f2] dark:bg-[#60a5fa] mt-1" />
             ) : (
               <span className="w-1.5 h-1.5 mt-1" />
             )}
@@ -137,7 +137,7 @@ export function AdminBottomNav({ tenantSlug, pendingCount = 0 }: AdminBottomNavP
             <Link
               id="tour-mobile-orders"
               href={`/admin/${tenantSlug}/orders`}
-              className="relative w-13 h-13 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 text-white flex items-center justify-center font-black shadow-lg shadow-indigo-500/30 active:scale-90 transition-transform border-[3px] border-[#f0f4fc] dark:border-[#090d16]"
+              className="relative w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#1d64f2] via-[#2563eb] to-[#38bdf8] text-white flex items-center justify-center font-black shadow-lg shadow-[#1d64f2]/35 active:scale-90 transition-transform border-[3px] border-[#f0f4fc] dark:border-[#0a0d14]"
               title="Comandera de Cocina"
             >
               <Flame className="w-6 h-6 fill-current stroke-1" />
@@ -154,12 +154,12 @@ export function AdminBottomNav({ tenantSlug, pendingCount = 0 }: AdminBottomNavP
             id="tour-mobile-theme"
             href={`/admin/${tenantSlug}/theme`}
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 active:scale-95 ${
-              isThemeActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              isThemeActive ? 'text-[#1d64f2] dark:text-[#60a5fa]' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Palette className={`w-5 h-5 ${isThemeActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
             {isThemeActive ? (
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 mt-1" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1d64f2] dark:bg-[#60a5fa] mt-1" />
             ) : (
               <span className="w-1.5 h-1.5 mt-1" />
             )}
@@ -171,13 +171,13 @@ export function AdminBottomNav({ tenantSlug, pendingCount = 0 }: AdminBottomNavP
             type="button"
             onClick={() => setShowMoreModal(true)}
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 active:scale-95 ${
-              isMoreActive || showMoreModal ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              isMoreActive || showMoreModal ? 'text-[#1d64f2] dark:text-[#60a5fa]' : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <MoreHorizontal className="w-5 h-5 stroke-[2.5]" />
             <span className="text-[9px] font-black mt-0.5 leading-none">Más</span>
             {isMoreActive || showMoreModal ? (
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 mt-1" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1d64f2] dark:bg-[#60a5fa] mt-1" />
             ) : (
               <span className="w-1.5 h-1.5 mt-1" />
             )}

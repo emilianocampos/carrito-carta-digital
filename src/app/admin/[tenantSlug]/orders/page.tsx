@@ -18,7 +18,7 @@ interface AdminOrdersPageProps {
 export async function generateMetadata({ params }: AdminOrdersPageProps): Promise<Metadata> {
   const { tenantSlug } = await params;
   return {
-    title: `Cocina KDS | ${tenantSlug} — Carrito Take-Away`,
+    title: `Comandera de Pedidos | ${tenantSlug} — Carrito Take-Away`,
     description: 'Comandera y despacho en tiempo real para cocina.',
   };
 }

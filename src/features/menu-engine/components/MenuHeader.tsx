@@ -127,14 +127,14 @@ export function MenuHeader({
               <button
                 type="button"
                 onClick={onOpenCart}
-                style={{ backgroundColor: 'var(--theme-primary, #5865F2)' }}
-                className="py-2.5 px-4 rounded-xl hover:brightness-110 text-white font-bold text-xs shadow-md shadow-[#5865F2]/25 active:scale-95 transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                style={{ backgroundColor: 'var(--theme-primary, #1d64f2)' }}
+                className="py-2.5 px-4 rounded-full hover:brightness-110 text-white font-bold text-xs shadow-md shadow-[#1d64f2]/30 active:scale-95 transition-all flex items-center gap-2 shrink-0 cursor-pointer"
               >
                 <ShoppingCart className="w-4 h-4 stroke-[2.5]" />
                 <span className="hidden sm:inline">Ver Carrito</span>
                 {cartCount > 0 && (
                   <span
-                    style={{ color: 'var(--theme-primary, #5865F2)' }}
+                    style={{ color: 'var(--theme-primary, #1d64f2)' }}
                     className="w-5 h-5 rounded-full bg-white text-[11px] font-black flex items-center justify-center shadow-xs"
                   >
                     {cartCount}
@@ -152,9 +152,8 @@ export function MenuHeader({
           <div
             className="absolute inset-x-0 -top-[15%] w-full h-[130%]"
             style={{
-              transform: `translate3d(0, ${scrollY * 0.4}px, 0) scale(${
-                scrollY < 0 ? 1 + Math.abs(scrollY) / 200 : 1.05
-              })`,
+              transform: `translate3d(0, ${scrollY * 0.4}px, 0) scale(${scrollY < 0 ? 1 + Math.abs(scrollY) / 200 : 1.05
+                })`,
               willChange: 'transform',
             }}
           >

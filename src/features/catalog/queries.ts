@@ -334,7 +334,7 @@ export async function getPublicMenuBySlug(slug: string): Promise<PublicMenuData 
       cardStyle: ((settings as unknown as { card_style?: 'con_foto' | 'sin_foto' | 'vintage' })?.card_style) ?? 'con_foto',
     },
     theme: {
-      presetCode: theme?.preset_code ?? 'street_food_dark',
+      presetCode: theme?.preset_code ?? 'antigravity_dark',
       tokens: (theme?.tokens as Record<string, unknown>) ?? {},
       layoutConfig: (theme?.layout_config as Record<string, unknown>) ?? {},
     },

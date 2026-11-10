@@ -404,7 +404,7 @@ export function KitchenKDSView({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                <span>Comandera KDS</span>
+                <span>Comandera de Pedidos</span>
               </h1>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="En vivo" />
               <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider hidden sm:inline">

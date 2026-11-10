@@ -345,7 +345,7 @@ export function AdminNotificationListener({
                 onClick={() => setActiveAlert(null)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs shadow-sm active:scale-95 transition-all"
               >
-                <span>Ver en Cocina (KDS)</span>
+                <span>Ver en Cocina</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
